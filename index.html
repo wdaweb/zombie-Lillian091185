@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>打殭屍小遊戲</title>
+    <style>
+        #bg {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(132, 84, 226, 0.5)), url(./imgs/4.jpg);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            position: fixed;
+        }
+
+
+
+        #game {
+            width: 730px;
+            height: 730px;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.2), rgba(228, 216, 251, 0.6)), url(./imgs/4.jpg);
+            background-size: cover;
+            border-radius: 40px;
+            margin: auto;
+            cursor: url(./imgs/6.png) 25 25, auto;
+            overflow: hidden;
+            position: relative;
+            opacity: 0.9;
+            box-shadow: 0 0 10px 15px white inset;
+        }
+
+        #game img {
+            height: 100px;
+            position: absolute;
+        }
+
+        #start {
+            margin: auto;
+        }
+
+        .btn {
+            position: absolute;
+            margin: auto;
+            bottom: 100px;
+            left: 50%;
+        }
+
+        .status {
+            width: 300px;
+            height: 200px;
+            background-image: url(./imgs/8.png);
+            background-size: cover;
+            position: absolute;
+            top: 0;
+        }
+
+        p {
+            font-size: 1.3em;
+            font-weight: bold;
+            font-family: '微軟正黑體', sans-serif;
+            position: relative;
+            left: 110px;
+            top: 70px;
+            color: white;
+            text-shadow: 1px 1px 5px red;
+
+        }
+
+        input {
+            background: orange;
+            background-size: contain;
+            width: 100px;
+            font-family: 'Josefin Sans', sans-serif;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: cornsilk;
+            text-shadow: 1px 1px 5px green;
+            cursor: pointer;
+            padding: 10px;
+            box-shadow: 1px 1px 10px red;
+        }
+
+        input:hover {
+            background: red;
+
+        }
+
+        #p {
+            width: 100%;
+            height: 100%;
+            background-image: url(./imgs/p_left.png);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: left;
+            position: fixed;
+            top: 55%;
+            pointer-events: none;
+        }
+
+        #high {
+            position: absolute;
+            top: 200px;
+            left: 65px;
+            color: white;
+            font-family: '微軟正黑體', sans-serif;
+            text-shadow: 0 0 5px red;
+            font-weight: bold;
+        }
+
+        span {
+            color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="bg"></div>
+    <div id="game"></div>
+    <div id="p"></div>
+    <div class="btn">
+        <input type="button" value="PLAY" id="start">
+    </div>
+    <div class="status">
+        <p>分數 <span id="score">0</span> 分</p>
+        <p>剩餘 <span id="sec">0</span> 秒</p>
+    </div>
+
+    <div id="high">
+        最高分數: <span id="highNameText">沒有人</span> 的分數是 <span id="highScoreText">0</span>
+    </div>
+
+    <script src="./jquery-3.4.1.min.js"></script>
+    <script>
+        let high = {
+            name: "",
+            score: 0
+        };
+        let highNameText = document.getElementById("highNameText");
+        let highScoreText = document.getElementById("highScoreText")
+        let highStorage = window.localStorage.getItem("highscore");
+
+        if (highStorage != null) {
+            high = JSON.parse(highStorage);
+            highNameText.innerText = high.name;
+            highScoreText.innerText = high.score;
+        }
+
+        $(function () {
+            //分數
+            let score = 0;
+            //遊戲時間
+            let sec = 15;
+
+            //遊戲倒數計時
+            let gametimer = 0;
+
+            //殭屍流水號
+            let zbid = 0;
+
+            //隨機
+            let rand = (num) => {
+                return Math.round(Math.random() * num);
+            }
+
+
+
+            //移動殭屍
+            let movezb = (id) => {
+                $(`#zb${id}`).animate({
+                    left: rand(100) + "%",
+                    top: rand(100) + "%"
+                }, 2500, function () {
+                    movezb(id);
+                })
+            }
+            //點開始按鈕時
+            $("#start").on("click", function () {
+                //將按鈕停用
+                $(this).attr("disabled", true);
+
+                //重設時間及分數
+                sec = 15;
+                $("#sec").text(sec);
+                score = 0;
+                $("#score").text(score);
+                //開始倒數
+                gametimer = setInterval(() => {
+                    //秒數減1，修改文字
+                    sec--;
+                    $("#sec").text(sec);
+                    //如果到0
+
+                    if (sec == 0) {
+                        clearInterval(gametimer);
+                        $(this).attr("disabled", false);
+
+                        setTimeout(() => {
+                            let s = $("#score").html();
+                            alert(`時間到,你得到 ${s} 分!`);
+                            $("#game img").remove();
+
+                            if (score > high.score) {
+                                let playerName = prompt("恭喜你得到最高分，請輸入你的名字");
+                                high.name = playerName;
+                                highNameText.innerText = playerName;
+                                high.score = score;
+                                highScoreText.innerText = score;
+                                window.localStorage.setItem("highscore", JSON.stringify(
+                                    high));
+                            }
+
+                        }, 100);
+
+                    }
+
+                    let num = rand(30);
+                    if (num > 1) {
+                        $("#game").append(`<img src="./imgs/2.gif" id="zb${zbid}">`);
+                        $(`#zb${zbid}`).css({
+                            left: rand(100) + "%",
+                            top: rand(100) + "%"
+                        });
+                        movezb(zbid);
+                        zbid++;
+                    }
+                }, 1000);
+            })
+
+            $("#game").on("click", "img", function () {
+                $(this).attr("src", "./imgs/3.png");
+                $(this).stop();
+                $(this).css("pointer-events", "none");
+                score++;
+                $("#score").text(score);
+            })
+        })
+    </script>
+
+</body>
+
+</html>
